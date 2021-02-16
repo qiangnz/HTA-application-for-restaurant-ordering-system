@@ -1,0 +1,263 @@
+<style type="text/css">
+  body {background-color:lightsteelblue;}
+  p {font:bold 18px arial;}
+</style>
+
+<html>
+<head>
+
+<!--HTA application tags-->
+<HTA:APPLICATION>
+
+<title>Gigantuano Pizza Company</title>
+<script language="javascript" type="text/javascript">
+
+function screen()
+{
+	window.resizeTo(840,680);
+}
+//addOrderItem function for customer oredr pizza
+function addOrderItem()
+{
+	//Create a variable for pizza option box
+	var pizza = document.getElementById("pizza");
+	//Create a variable to store customer's selection
+	var option = document.createElement("option");
+	option.text = pizza.options[pizza.selectedIndex].text;
+	option.value= pizza.options[pizza.selectedIndex].value;
+	//Create a variable for orderlist option box
+	var orderlist = document.getElementById("orderlist");
+	
+	//Add pizza to orderlist option box
+	//Check to make sure it is not the first one from pizza option box
+	if ( pizza.options[pizza.selectedIndex].text != "Select a pizza") 
+	{
+		//Add selected pizza to orderlist option box
+		orderlist.add(option);		
+		//Create a variable for store customer ordered pizza current total
+		var currenttotal= parseFloat( document.getElementById("ordertotal").value.replace('$',''));
+		//Create a variable for store customer ordered pizza newamount
+		var newamount = parseFloat( pizza.options[pizza.selectedIndex].value.replace('$',''));
+		//Add cuttrnt total plus newamount and assign back to textbox
+		document.getElementById("ordertotal").value ="$" + (currenttotal + newamount).toFixed(2);
+		document.getElementById("pizza").selectedIndex = 0;
+	}
+	else
+	{
+		//if customer not seltect alert customet select a pizza 
+		alert("Please select a pizza")
+	}
+}
+
+//removeOrderItem function for customer remove pizza from order list
+function removeOrderItem()
+{
+	//Create a variable for orderlist option box
+	var orderList = document.getElementById("orderlist");
+	//Create a variable for customer remove a pizza after to store current total
+	var currenttotal = parseFloat(document.getElementById("ordertotal").value.replace('$',''));
+	//Create a variable for customer remove a pizza after to store new amount
+	var newamount = parseFloat (orderList.options[orderList.selectedIndex].value.replace('$',''));
+	orderTotal = parseFloat(document.getElementById("ordertotal").value);
+	//Validation check order list have pizza or not
+	if (orderList.selectedIndex > 0)
+	{
+		//take selected pizza from orderlist option box and remove it 
+		orderList.remove(orderList.selectedIndex);
+		//Calculate the new order total amount 
+		document.getElementById("ordertotal").value= "$" + (currenttotal-newamount).toFixed(2);
+	}
+		else
+		{
+			//Validation check if customer did not select a pizza when click remove order item 
+			if (document.getElementById("ordertotal").value==0.00)
+			{
+				//alert your order list is empty
+				alert( "Your order list is empty");
+			}
+			//Check if customer remove all pizzas from orderlisr when click remove order item
+			else if (document.getElementById("ordertotal").value== "$0.00")
+			{
+				//alert You already remove all items, please select a pizza again
+				alert( " You already remove all items, please select a pizza again");
+			}
+			else
+			{	
+				//when customer did select a pizza when click remove order item
+				alert ("Please select order item to remove");
+			}
+		}
+}		
+
+//submit order function and create a text file as file
+function submitOrder(file) 
+{
+	//Create a file variable using new keyword and this provides the functionality to access the file system of cusromer's PC
+	var fso  = new ActiveXObject("Scripting.FileSystemObject"); 
+	//Create a variable for store order list
+  	var selectObject=document.getElementById("orderlist");
+	//Create a variable filename for check file name only contain letters
+	var filename= /^[A-Za-z]+$/;
+	
+	//Creare a variable for take a date and time into the txt file
+	var today = new Date();
+	var date = today.getDate()+'-'+(today.getMonth()+1)+'-'+today.getFullYear();
+	var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+	var dateTime = date+' '+time;
+
+	//Validation check customer already selected pizza
+	if (document.getElementById("ordertotal").value == '0.0')
+	{
+		//When customer did not select a pizza yet, alert Please add piszza from the menu
+		alert( "Please add piszza from the menu");
+	}
+	//Validation check customer selected pizza but he/she removed all items form order list
+	else if (document.getElementById("ordertotal").value == '$0.00')
+	{
+		//When customer selected pizza but he/she removed all items form order list, alert You have removed all items from your order list
+		alert (" You have removed all items from your order list");
+	}
+	else
+	{
+		//Validation check customer type a file name 
+		if (file==".txt")
+		{	
+			//If customer did type any word for file name,alert Please type your order submission file name (one word)
+			alert("Please type your order submission file name (one word) ");
+		}
+		//Validation check file name only contain letters 
+		else if (!filename.test(document.getElementById("orderfilename").value.replace('.txt','')))
+		{
+			//if file name contain space, numbers or symbol, alert letters only
+			alert ("Letters only");
+		}
+		else
+		{
+			//Create a file variable using new keyword for access to customer pc check who have save two times order file as the same name
+			var filenamecheck = new ActiveXObject("Scripting.FileSystemObject");
+			//Validation check customer save order file twice as the same name
+			if (filenamecheck.FileExists(file))
+			{
+				//If customer save order file twice and use a same name, alert You already have same name order file  \r\nPlease change a order file name
+				alert ("You already have same name order file  \r\nPlease change an order file name ");
+			}
+			else
+			{
+				//Create a variable for give a name and returns textstream.
+				var fh = fso.CreateTextFile(file, true); 
+				//Create a string variable to store contents for this new file
+				var str = "Thank you for your order!\r\n";
+				str = str+ "Your order details are shown below:\r\n"+'\r\n';
+				
+				//Use for loop through each item in the order list for the length of the oreder list
+				for (var i=0; i < selectObject.length; i++)
+				{
+					//Validation check the text file tontents without first line in option box
+					if ( selectObject.options[i].text != "list of ordered items" )
+					{
+					//Create a string variable to store ordered pizz name and price for this new file
+					str = str + selectObject.options[i].text + '\r\n';
+					}
+				}
+				//Create a string variable to store order total price for this new file
+				str = str + '\r\n' + "Order Total:" + document.getElementById("ordertotal").value+ '\r\n' ;
+				//Create a string variable to store customer order time for this new file
+				str = str + '\r\n' + dateTime + '\r\n';			
+				//Create a string variable to store contents for this new file tell to customer attach this file 
+				str = str +"Please attach " + file + " and Email us" + '\r\n' ;
+				//Create a string variable to store contents for this new file
+				str = str+ "Thanks for choosing to buy pizza from us";
+				//Use fn variable to write into a text file
+				fh.WriteLine(str); 
+				//Save this file
+				fh.Close();
+				//Alert customer Your order has been submitted and display the file name
+				alert('Your order has been submitted as ' + file);	
+			}
+		}
+	}
+}
+
+
+//Open file function for customer open order file
+function OpenFile(file)
+{	
+	//Validation check order list already have any pizzas
+	if (document.getElementById("ordertotal").value == '0.0' || document.getElementById("ordertotal").value == '$0.00')
+	{
+		//If order list does not have any pizza alert Please order and submit your order
+		alert ("Please order and submit your order ");
+	}
+	//Validation check customer type any letters in to order file name box
+	else if ( file==".txt")
+	{
+		//If order file box does not have a word alert Please enter your order name and click Submit Order
+		alert ("Please enter your order name and click Submit Order");
+	}
+	else
+	{
+		//Create a file variable using new keyword for access to customer pc check who type any letters into order file name box
+		var filenamecheck = new ActiveXObject("Scripting.FileSystemObject");
+		//Validation check customer type file name into order file name box and compare same name file
+		if (filenamecheck.FileExists(file))
+		{
+		//Create a file variable using new keyword and access to customer pc to open text file
+		WshShell = new ActiveXObject("WScript.Shell");
+		//Use the variable to run the local file
+		WshShell.Run(file,1,false);
+		}
+		else 
+		{
+		//If customer only type any letters into order file name box, but who did not submit, alert Please click Submit Order
+		alert ("Please click Submit Order");
+		}
+	}
+}
+function closeMe()
+{
+	window.opener = self;
+    window.close();
+}
+
+
+</script>
+<!--Student name: Qiang Zhang Student ID: 2173138-->
+</head>
+
+<body onload="screen();">
+
+<h1>Gigantuano Pizza Company</h1>
+
+<p>Place your order now!</p>
+
+<select id="pizza" >
+<option value="0.00">Select a pizza</option>
+<option value="10.00">Hawaiian - Large Stuffed Crust - $10.00</option>
+<option value="8.00">Hawaiian - XL Standard Base - $8.00</option>
+<option value="13.50">Hawaiian - XL Stuffed Crust - $13.50</option>
+<option value="10.00">Beef and Onion - Large Stuffed Crust - $10.00</option>
+<option value="8.00">Beef and Onion - XL Standard Base - $8.00</option>
+<option value="13.50">Beef and Onion - XL Stuffed Crust - $13.50</option>
+<option value="11.00">Peperoni Lovers - Large Stuffed Crust - $11.00</option>
+<option value="13.50">Chicken Supreme - Large Stuffed Crust - $13.50</option>
+</select>
+
+<input type ="button" onclick="addOrderItem()" value="Add Order Item"><br>
+<br>
+Ordered Items:  click to check order
+<select id="orderlist"><option value="0.00">list of ordered items</option></select>
+<input type ="button" onclick="removeOrderItem();" value="Remove Order Item">
+
+<br>
+Order Total: <input type ="text" id="ordertotal" value=0.0 readonly="readonly"></input><br>
+<br>
+<br>
+Type your order submission file name (one word):<input type ="text" id="orderfilename" value=""></input>
+Click to submit your order: 
+<input type ="button" onclick="submitOrder(document.getElementById('orderfilename').value + '.txt');" value="Submit Order">
+<input type="button" value="Open Order Text File" onclick="OpenFile( document.getElementById('orderfilename').value + '.txt' );"/>
+<br>
+
+
+</body>
+</html>
